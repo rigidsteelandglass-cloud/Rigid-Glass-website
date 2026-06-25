@@ -1,17 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { site } from '../config';
+const firstName = site.owner.split(' ')[0];
 ---
 
 <Layout title="Thanks" description="Your request was sent.">
   <section class="mx-auto flex max-w-xl flex-col items-center px-5 py-28 text-center">
-    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-aqua-light text-aqua-deep">
+    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-red-soft text-red">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
     </div>
-    <h1 class="mt-6 font-display text-4xl font-600 tracking-tight text-ink">Thanks — it’s on its way!</h1>
+    <h1 class="mt-6 font-display text-4xl font-900 uppercase tracking-tight text-ink">Thanks — it’s on its way!</h1>
     <p class="mt-3 text-lg text-ink-soft">
-      {site.owner} got your request and will be in touch soon. Need a faster answer? Call or text {site.phone}.
+      {firstName} got your request and will be in touch soon. Need a faster answer? Call or text {site.phone}.
     </p>
-    <a href="/" class="mt-8 rounded-lg bg-ink px-6 py-3 text-sm font-600 text-mist transition-colors hover:bg-aqua-deep">Back to home</a>
+    <a href="/" class="mt-8 rounded-lg bg-red px-6 py-3 text-sm font-700 text-white transition-colors hover:bg-red-deep">Back to home</a>
   </section>
 </Layout>

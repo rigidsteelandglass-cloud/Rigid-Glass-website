@@ -1,0 +1,42 @@
+---
+// RIGID wordmark: black mountain range with red peaks, over "RIGID / STEEL & GLASS".
+// Size it by setting font-size on the element (everything scales in em).
+interface Props {
+  class?: string;
+  showTagline?: boolean;
+}
+const { class: cls = '', showTagline = true } = Astro.props;
+---
+
+<span class:list={['inline-flex flex-col items-center leading-none select-none', cls]}>
+  <svg viewBox="0 0 200 90" class="block h-auto w-[2.4em]" aria-hidden="true" focusable="false">
+    <!-- mountain range -->
+    <path
+      d="M0,88 L18,52 L30,66 L46,34 L58,50 L72,40 L92,14 L108,44 L120,34 L138,58 L150,46 L172,62 L200,88 Z"
+      fill="var(--color-ink)"
+    />
+    <!-- red peaks -->
+    <path d="M84,28 L92,14 L100,28 Z" fill="var(--color-red)" />
+    <path d="M40,44 L46,34 L52,44 Z" fill="var(--color-red)" />
+    <path d="M114,46 L120,34 L126,46 Z" fill="var(--color-red)" />
+  </svg>
+
+  <span
+    class="font-display text-[1em] font-900 tracking-[0.02em] text-red"
+    style="line-height:0.9"
+  >
+    RIGID
+  </span>
+
+  {
+    showTagline && (
+      <span class="mt-[0.12em] flex items-center gap-[0.4em] text-ink">
+        <span class="h-px w-[0.5em] bg-red" />
+        <span class="font-display text-[0.30em] font-700 uppercase tracking-[0.22em]">
+          Steel &amp; Glass
+        </span>
+        <span class="h-px w-[0.5em] bg-red" />
+      </span>
+    )
+  }
+</span>

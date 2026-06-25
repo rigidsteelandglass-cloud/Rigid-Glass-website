@@ -6,8 +6,8 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Cache uploaded photos aggressively (filenames are stable).
+# Cache gallery photos aggressively (filenames are stable / content-hashed).
 [[headers]]
-  for = "/images/uploads/*"
+  for = "/gallery/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"

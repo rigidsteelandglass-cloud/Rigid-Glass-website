@@ -11,10 +11,10 @@ interface Props {
 
 const {
   title,
-  description = `${site.owner} — ${site.tagline}. ${site.serviceArea} bathroom & shower remodeling.`,
+  description = `${site.legalName} — ${site.intro} Proudly serving ${site.serviceArea}.`,
 } = Astro.props;
 
-const fullTitle = title ? `${title} · ${site.businessName}` : `${site.businessName} — ${site.tagline}`;
+const fullTitle = title ? `${title} · ${site.legalName}` : `${site.legalName} — ${site.tagline}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.com');
 ---
 
@@ -28,32 +28,29 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.com
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
 
-    <!-- Open Graph / social sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Local business structured data (helps Noah show up in search) -->
     <script
       type="application/ld+json"
       set:html={JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'HomeAndConstructionBusiness',
-        name: site.businessName,
-        description: site.tagline,
-        areaServed: site.serviceArea,
+        name: site.legalName,
+        description: site.intro,
+        areaServed: [site.serviceArea, ...site.cities],
         telephone: site.phone,
-        email: site.email,
+        founder: site.owner,
       })}
     />
   </head>
@@ -64,7 +61,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.com
     </main>
     <Footer />
 
-    <!-- Reveal-on-scroll: pure progressive enhancement -->
     <script>
       const els = document.querySelectorAll('.reveal');
       if ('IntersectionObserver' in window && els.length) {

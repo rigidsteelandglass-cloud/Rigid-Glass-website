@@ -1,0 +1,66 @@
+---
+import type { Photo } from '../lib/gallery';
+interface Props {
+  photos: Photo[];
+}
+const { photos } = Astro.props;
+---
+
+<div class="[column-fill:_balance] gap-4 sm:columns-2 lg:columns-3">
+  {
+    photos.map((p) => (
+      <button
+        type="button"
+        class="group mb-4 block w-full overflow-hidden rounded-xl border border-stone bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-red"
+        data-lightbox-src={p.src}
+        data-lightbox-alt={p.alt ?? ''}
+      >
+        <img
+          src={p.src}
+          alt={p.alt ?? 'RIGID glass project'}
+          loading="lazy"
+          decoding="async"
+          class="w-full transition-transform duration-500 group-hover:scale-[1.03]"
+        />
+      </button>
+    ))
+  }
+</div>
+
+<!-- Lightbox -->
+<div
+  id="lightbox"
+  class="fixed inset-0 z-[100] hidden items-center justify-center bg-ink/90 p-4 backdrop-blur-sm"
+>
+  <button id="lightbox-close" class="absolute right-5 top-5 text-white/80 hover:text-white" aria-label="Close">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[92vw] rounded-lg object-contain shadow-2xl" />
+</div>
+
+<script>
+  const box = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img') as HTMLImageElement;
+  const close = () => {
+    box?.classList.add('hidden');
+    box?.classList.remove('flex');
+    document.body.style.overflow = '';
+  };
+  document.querySelectorAll('[data-lightbox-src]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const src = el.getAttribute('data-lightbox-src') || '';
+      img.src = src;
+      img.alt = el.getAttribute('data-lightbox-alt') || '';
+      box?.classList.remove('hidden');
+      box?.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+  document.getElementById('lightbox-close')?.addEventListener('click', close);
+  box?.addEventListener('click', (e) => {
+    if (e.target === box) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+</script>

@@ -1,65 +1,62 @@
-// Generates lightweight SVG placeholder "photos" so the site looks populated
-// before Noah adds real ones. Safe to delete after real photos are in.
+// Generates light, on-brand "glass panel" placeholder images so the gallery
+// looks populated before real photos sync from Google Drive.
+// These live in public/gallery/ and are replaced by real Drive photos.
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const outDir = new URL('../public/images/uploads/', import.meta.url);
+const outDir = new URL('../public/gallery/', import.meta.url);
 mkdirSync(outDir, { recursive: true });
 
-const tile = (w, h, { a, b, grout, label, ratio = 0.62 }) => {
-  const cols = 6;
-  const rows = Math.round((cols * h) / w);
-  const cw = w / cols;
-  const ch = h / rows;
-  let rects = '';
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      // brick offset every other row
-      const x = c * cw + (r % 2 ? cw / 2 : 0) - (r % 2 ? cw / 2 : 0);
-      const shade = (r * cols + c) % 5 === 0 ? 0.92 : (c % 3 === 0 ? 1.05 : 1);
-      rects += `<rect x="${(c * cw).toFixed(1)}" y="${(r * ch).toFixed(1)}" width="${(cw - 2).toFixed(1)}" height="${(ch - 2).toFixed(1)}" rx="2" fill="url(#g)" opacity="${(0.55 * shade).toFixed(2)}"/>`;
-    }
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">
+const mountains = (x, y, s, color) =>
+  `<g transform="translate(${x},${y}) scale(${s})" opacity="0.9">
+     <path d="M0,30 L8,12 L13,20 L21,4 L29,18 L37,10 L48,30 Z" fill="${color}"/>
+     <path d="M18,9 L21,4 L24,9 Z" fill="var(--red)"/>
+   </g>`;
+
+function panel(w, h, { label }) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}" style="--red:#d81f26">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${a}"/>
-      <stop offset="1" stop-color="${b}"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f8f9"/>
+      <stop offset="1" stop-color="#e7e9ec"/>
     </linearGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
-      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.4"/>
     </linearGradient>
   </defs>
-  <rect width="${w}" height="${h}" fill="${grout}"/>
-  ${rects}
-  <rect width="${w}" height="${h}" fill="url(#sheen)"/>
-  <g opacity="0.85" transform="translate(${w / 2}, ${h * ratio})">
-    <circle r="34" fill="#ffffff" opacity="0.12"/>
-    <path d="M0 -22 C 0 -22 -13 -6 -13 2 a 13 13 0 0 0 26 0 C 13 -6 0 -22 0 -22 Z" fill="#ffffff" opacity="0.9"/>
+  <rect width="${w}" height="${h}" fill="url(#bg)"/>
+  <!-- glass reflection bands -->
+  <g opacity="0.7">
+    <rect x="${w * 0.12}" y="-20" width="${w * 0.16}" height="${h + 40}" fill="url(#glass)" transform="skewX(-12)"/>
+    <rect x="${w * 0.55}" y="-20" width="${w * 0.10}" height="${h + 40}" fill="url(#glass)" transform="skewX(-12)"/>
   </g>
-  <text x="${w / 2}" y="${h - 22}" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#ffffff" opacity="0.7">${label}</text>
+  <!-- thin frame -->
+  <rect x="6" y="6" width="${w - 12}" height="${h - 12}" rx="6" fill="none" stroke="#11111422" stroke-width="2"/>
+  <!-- red corner accent -->
+  <rect x="6" y="${h - 14}" width="${w * 0.32}" height="4" fill="var(--red)"/>
+  <!-- mark -->
+  ${mountains(w / 2 - 24, h / 2 - 24, 1.0, '#11111e')}
+  <text x="${w / 2}" y="${h / 2 + 26}" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="800" font-size="14" letter-spacing="2" fill="#11111e" opacity="0.55">RIGID</text>
+  <text x="${w / 2}" y="${h - 26}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#44464d" opacity="0.6">${label}</text>
 </svg>`;
-};
-
-const palettes = [
-  { a: '#0d9488', b: '#0f766e', grout: '#0b3b39' },
-  { a: '#475569', b: '#1e293b', grout: '#0f172a' },
-  { a: '#0ea5e9', b: '#0369a1', grout: '#082f49' },
-  { a: '#a8a29e', b: '#57534e', grout: '#292524' },
-  { a: '#14b8a6', b: '#0d9488', grout: '#0b3b39' },
-  { a: '#64748b', b: '#334155', grout: '#1e293b' },
-];
-
-// Project covers (4:3-ish, tall enough for hero crop)
-for (let i = 1; i <= 6; i++) {
-  const p = palettes[(i - 1) % palettes.length];
-  writeFileSync(new URL(`sample-${i}.svg`, outDir), tile(1200, 1500, { ...p, label: 'Sample photo' }));
 }
 
-// Noah portrait placeholder
-writeFileSync(
-  new URL('noah.svg', outDir),
-  tile(900, 1125, { a: '#0f766e', b: '#0f172a', grout: '#0b3b39', label: 'Photo of Noah', ratio: 0.4 })
-);
+// Varied aspect ratios for a natural gallery feel.
+const sizes = [
+  [1200, 1500], // portrait
+  [1200, 900], // landscape
+  [1200, 1200], // square
+  [1200, 1500],
+  [1200, 800],
+  [1200, 1300],
+  [1200, 1000],
+  [1200, 1500],
+  [1200, 900],
+];
 
-console.log('Placeholder images written to public/images/uploads/');
+sizes.forEach((dim, i) => {
+  writeFileSync(new URL(`seed-${i + 1}.svg`, outDir), panel(dim[0], dim[1], { label: 'Photo coming soon' }));
+});
+
+console.log(`Wrote ${sizes.length} placeholder images to public/gallery/`);

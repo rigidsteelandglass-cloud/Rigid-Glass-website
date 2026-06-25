@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "sync": "node scripts/sync-drive.mjs",
+    "prebuild": "node scripts/sync-drive.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
