@@ -16,7 +16,7 @@ export const site = {
 
   // Contact
   phone: '(435) 200-7219',
-  email: '', // none provided yet — leave '' to hide email UI
+  email: 'rigidsteelandglass@gmail.com',
   instagram: '', // e.g. 'https://instagram.com/...'
 
   // Service area

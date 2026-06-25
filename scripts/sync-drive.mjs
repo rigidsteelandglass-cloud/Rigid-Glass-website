@@ -20,7 +20,9 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const FOLDER_ID = process.env.GDRIVE_FOLDER_ID;
+// Noah's public "RIGID" photos folder. Override with env if it ever changes.
+const FOLDER_ID = process.env.GDRIVE_FOLDER_ID || '1WgfoLI9nC_EO41i9Mqk3qe9qz0iBvlWW';
+// The API key is the only secret — never commit it. Set it via env / Netlify.
 const API_KEY = process.env.GDRIVE_API_KEY;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');

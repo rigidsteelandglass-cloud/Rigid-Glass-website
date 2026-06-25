@@ -38,6 +38,16 @@ const smsHref = `sms:${site.phone.replace(/[^0-9+]/g, '')}`;
         </span>
       </a>
 
+      <a href={`mailto:${site.email}`} class="flex items-center gap-4 rounded-2xl border border-stone bg-white p-5 transition-colors hover:border-red">
+        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-soft text-red">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+        </span>
+        <span class="min-w-0">
+          <span class="eyebrow block text-ink-soft">Email</span>
+          <span class="block truncate font-display text-base font-800 text-ink">{site.email}</span>
+        </span>
+      </a>
+
       <div class="rounded-2xl border border-stone bg-mist p-5 text-sm text-ink-soft">
         <p class="font-600 text-ink">Proudly serving {site.serviceArea}</p>
         <p class="mt-1">{site.cities.join(' · ')}</p>

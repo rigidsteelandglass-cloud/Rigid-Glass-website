@@ -34,6 +34,7 @@ const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
       <p class="eyebrow text-red">Get in touch</p>
       <ul class="mt-3 space-y-2 text-sm">
         <li><a class="font-600 text-ink hover:text-red" href={telHref}>{site.phone}</a></li>
+        <li><a class="break-all text-ink-soft hover:text-red" href={`mailto:${site.email}`}>{site.email}</a></li>
         <li class="text-ink-soft">Serving {site.serviceArea}</li>
         <li class="text-ink-soft">{site.cities.join(' · ')}</li>
       </ul>
