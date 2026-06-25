@@ -1,0 +1,37 @@
+---
+import { site } from '../config';
+const year = new Date().getFullYear();
+const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
+---
+
+<footer class="mt-24 border-t border-stone bg-ink text-mist">
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-3">
+    <div>
+      <p class="font-display text-xl font-600">{site.businessName}</p>
+      <p class="mt-2 max-w-xs text-sm text-stone/80">{site.tagline}. Serving {site.serviceArea}.</p>
+    </div>
+
+    <div>
+      <p class="text-xs font-600 uppercase tracking-widest text-aqua-light">Get in touch</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a class="hover:text-aqua-light" href={telHref}>{site.phone}</a></li>
+        <li><a class="hover:text-aqua-light" href={`mailto:${site.email}`}>{site.email}</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <p class="text-xs font-600 uppercase tracking-widest text-aqua-light">Explore</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a class="hover:text-aqua-light" href="/work">Recent work</a></li>
+        <li><a class="hover:text-aqua-light" href="/about">About Noah</a></li>
+        <li><a class="hover:text-aqua-light" href="/contact">Request a quote</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-white/10">
+    <div class="mx-auto max-w-6xl px-5 py-5 text-xs text-stone/60">
+      © {year} {site.businessName}. All rights reserved.
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,58 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { site } from '../config';
+
+const values = [
+  { title: 'Craftsmanship first', body: 'Tile set straight, grout lines clean, waterproofing done by the book. The details are the job.' },
+  { title: 'Respect for your home', body: 'Floors covered, dust contained, and the site swept at the end of every day.' },
+  { title: 'Straight talk', body: 'Clear quotes, honest timelines, and a heads-up before anything changes.' },
+];
+---
+
+<Layout title="About" description={`Meet ${site.owner}, the craftsman behind ${site.businessName}.`}>
+  <section class="mx-auto max-w-5xl px-5 pt-16">
+    <div class="grid items-center gap-10 lg:grid-cols-5">
+      <div class="lg:col-span-3">
+        <p class="text-xs font-600 uppercase tracking-widest text-aqua-deep">About</p>
+        <h1 class="mt-2 font-display text-4xl font-600 tracking-tight text-ink sm:text-5xl">
+          Hi, I’m {site.owner}.
+        </h1>
+        <div class="mt-5 space-y-4 text-lg text-ink-soft">
+          <p>
+            I build custom showers and remodel bathrooms in {site.serviceArea}. What started as a
+            love for working with my hands turned into a craft I take seriously on every job.
+          </p>
+          <p>
+            From a simple tub-to-shower swap to a full bathroom transformation, I treat your home
+            like my own — careful work, clean job sites, and a finish you’ll be proud of for years.
+          </p>
+          <p>
+            If you’re planning a project, I’d love to hear about it. No pressure, just an honest
+            conversation about what’s possible.
+          </p>
+        </div>
+        <a href="/contact" class="mt-7 inline-block rounded-lg bg-ink px-6 py-3 text-sm font-600 text-mist transition-colors hover:bg-aqua-deep">
+          Get in touch
+        </a>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="aspect-[4/5] overflow-hidden rounded-3xl bg-stone shadow-xl ring-1 ring-stone">
+          <!-- Swap this for a real photo of Noah: replace /images/uploads/noah.svg -->
+          <img src="/images/uploads/noah.svg" alt={`Portrait of ${site.owner}`} class="h-full w-full object-cover" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 py-16">
+    <div class="grid gap-6 sm:grid-cols-3">
+      {values.map((v) => (
+        <div class="reveal rounded-2xl bg-white p-6 ring-1 ring-stone/70">
+          <h3 class="font-display text-lg font-600 text-ink">{v.title}</h3>
+          <p class="mt-2 text-sm text-ink-soft">{v.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>

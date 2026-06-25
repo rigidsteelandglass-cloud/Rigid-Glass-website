@@ -1,0 +1,13 @@
+# Netlify build settings for the Astro site.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Cache uploaded photos aggressively (filenames are stable).
+[[headers]]
+  for = "/images/uploads/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

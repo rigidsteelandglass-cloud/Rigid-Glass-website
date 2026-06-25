@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { site } from '../config';
+
+const all = await getCollection('projects');
+const sorted = all.sort(
+  (a, b) =>
+    a.data.order - b.data.order ||
+    b.data.date.getTime() - a.data.date.getTime()
+);
+const featured = sorted.filter((p) => p.data.featured).slice(0, 6);
+const showcase = featured.length ? featured : sorted.slice(0, 6);
+const heroImage = sorted[0]?.data.coverImage ?? '/images/uploads/sample-1.svg';
+
+const services = [
+  { title: 'Custom tile showers', body: 'Walk-ins, curbless, niches, and bench seats — built waterproof to last.' },
+  { title: 'Full bathroom remodels', body: 'From demo to the final fixture, a complete, clean transformation.' },
+  { title: 'Tub-to-shower conversions', body: 'Swap a dated tub for a modern, accessible shower.' },
+  { title: 'Tile & stone work', body: 'Floors, walls, and accent work with a craftsman’s finish.' },
+];
+---
+
+<Layout>
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-10 pt-16 lg:grid-cols-2 lg:pt-24">
+      <div>
+        <p class="inline-flex items-center gap-2 rounded-full bg-aqua-light px-3 py-1 text-xs font-600 uppercase tracking-widest text-aqua-deep">
+          <span class="h-1.5 w-1.5 rounded-full bg-aqua"></span>
+          Serving {site.serviceArea}
+        </p>
+        <h1 class="mt-5 font-display text-4xl font-600 leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+          Showers built to<br /><span class="text-aqua-deep">last a lifetime.</span>
+        </h1>
+        <p class="mt-5 max-w-md text-lg text-ink-soft">
+          {site.owner} builds custom tile showers and bathroom remodels with the care and
+          craftsmanship your home deserves. See the work, then let’s talk.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href="/contact" class="rounded-lg bg-ink px-6 py-3 text-sm font-600 text-mist shadow-sm transition-colors hover:bg-aqua-deep">
+            Get a free quote
+          </a>
+          <a href="/work" class="rounded-lg border border-stone bg-white px-6 py-3 text-sm font-600 text-ink transition-colors hover:border-aqua hover:text-aqua-deep">
+            See recent work
+          </a>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="aspect-[4/5] overflow-hidden rounded-3xl bg-stone shadow-2xl ring-1 ring-stone">
+          <img src={heroImage} alt="Recent shower project by Noah" class="h-full w-full object-cover" />
+        </div>
+        <div class="absolute -bottom-4 -left-4 hidden rounded-2xl bg-white p-4 shadow-xl ring-1 ring-stone sm:block">
+          <p class="font-display text-2xl font-700 text-ink">100%</p>
+          <p class="text-xs text-ink-soft">Waterproofed &amp; warrantied</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust strip -->
+  <section class="border-y border-stone bg-white">
+    <div class="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-5 py-8 text-center sm:grid-cols-4">
+      {[
+        ['Licensed', '& insured'],
+        ['Clean', 'job sites'],
+        ['On-time', 'finishes'],
+        ['Honest', 'pricing'],
+      ].map(([a, b]) => (
+        <div>
+          <p class="font-display text-xl font-700 text-aqua-deep">{a}</p>
+          <p class="text-sm text-ink-soft">{b}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Featured work -->
+  <section class="mx-auto max-w-6xl px-5 py-16">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-3xl font-600 tracking-tight text-ink">Recent work</h2>
+        <p class="mt-2 text-ink-soft">A few favorites. Every job is built to spec and to last.</p>
+      </div>
+      <a href="/work" class="hidden shrink-0 text-sm font-600 text-aqua-deep hover:underline sm:inline">View all →</a>
+    </div>
+
+    {showcase.length ? (
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {showcase.map((p) => (
+          <ProjectCard
+            href={`/work/${p.id}`}
+            title={p.data.title}
+            location={p.data.location}
+            summary={p.data.summary}
+            coverImage={p.data.coverImage}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="mt-8 rounded-xl border border-dashed border-stone bg-white p-8 text-center text-ink-soft">
+        Projects will appear here once they’re added in the dashboard.
+      </p>
+    )}
+  </section>
+
+  <!-- Services -->
+  <section class="border-t border-stone bg-white">
+    <div class="mx-auto max-w-6xl px-5 py-16">
+      <h2 class="font-display text-3xl font-600 tracking-tight text-ink">What {site.owner} does</h2>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {services.map((s) => (
+          <div class="reveal rounded-2xl bg-mist p-6 ring-1 ring-stone/70">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-aqua-light text-aqua-deep">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <h3 class="mt-4 font-display text-lg font-600 text-ink">{s.title}</h3>
+            <p class="mt-1.5 text-sm text-ink-soft">{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="mx-auto max-w-6xl px-5 py-16">
+    <div class="overflow-hidden rounded-3xl bg-ink px-8 py-12 text-center text-mist sm:px-16">
+      <h2 class="font-display text-3xl font-600 tracking-tight sm:text-4xl">Got a project in mind?</h2>
+      <p class="mx-auto mt-3 max-w-lg text-stone/80">
+        Tell {site.owner} what you’re picturing and get a straightforward quote — no pressure.
+      </p>
+      <a href="/contact" class="mt-7 inline-block rounded-lg bg-aqua px-7 py-3 text-sm font-600 text-mist transition-colors hover:bg-aqua-light hover:text-ink">
+        Request a free quote
+      </a>
+    </div>
+  </section>
+</Layout>
