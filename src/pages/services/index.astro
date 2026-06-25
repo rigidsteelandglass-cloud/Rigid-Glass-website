@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { site, categories } from '../../config';
+import { featuredImage } from '../../lib/gallery';
 
 const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
 ---
@@ -20,10 +21,10 @@ const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
   <!-- Category cards -->
   <section class="mx-auto max-w-6xl px-5 py-12">
     <div class="grid gap-8 md:grid-cols-3">
-      {categories.map((c) => (
+      {categories.map((c, i) => (
         <a href={`/services/${c.slug}`} class="reveal group flex flex-col overflow-hidden rounded-2xl border border-stone bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
           <div class="aspect-[4/3] overflow-hidden bg-mist">
-            <img src={c.image} alt={c.name} loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <img src={featuredImage(i + 1, c.image)} alt={c.name} loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
           <div class="flex flex-1 flex-col p-6">
             <h2 class="font-display text-xl font-800 uppercase tracking-wide text-ink">{c.name}</h2>

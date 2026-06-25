@@ -19,6 +19,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import sharp from 'sharp';
 
 // Noah's public "RIGID" photos folder. Override with env if it ever changes.
 const FOLDER_ID = process.env.GDRIVE_FOLDER_ID || '1WgfoLI9nC_EO41i9Mqk3qe9qz0iBvlWW';
@@ -57,18 +58,30 @@ async function listAll() {
   return files;
 }
 
-async function download(id, dest) {
-  const res = await fetch(`${API}/${id}?alt=media&key=${API_KEY}`);
-  if (!res.ok) throw new Error(`Download ${id} failed: ${res.status}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  writeFileSync(dest, buf);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Download via Google's public image CDN instead of the Drive API's download
+// endpoint. The CDN isn't subject to the API download quota (no 403 throttling),
+// pre-resizes (=s2000), and serves JPEG even for HEIC originals.
+async function fetchImage(id) {
+  let lastStatus;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt) await sleep(800 * attempt);
+    const res = await fetch(`https://lh3.googleusercontent.com/d/${id}=s2000`);
+    if (res.ok) return Buffer.from(await res.arrayBuffer());
+    lastStatus = res.status;
+  }
+  throw new Error(`CDN download ${id} failed: ${lastStatus}`);
 }
 
-const extFor = (name, mime) => {
-  const m = name.match(/\.[a-z0-9]+$/i);
-  if (m) return m[0].toLowerCase();
-  return '.' + (mime.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-};
+// Recompress + ensure correct orientation. Web-friendly, optimized JPEG.
+async function toWebJpeg(buf) {
+  return sharp(buf)
+    .rotate()
+    .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+}
 
 try {
   console.log('[sync-drive] Fetching photo list from Google Drive…');
@@ -80,14 +93,27 @@ try {
 
   const photos = [];
   for (const [i, f] of files.entries()) {
-    const ext = extFor(f.name, f.mimeType);
-    const fileName = `${String(i + 1).padStart(3, '0')}-${f.id}${ext}`;
-    await download(f.id, join(outImgDir, fileName));
-    photos.push({
-      src: `/gallery/drive/${fileName}`,
-      addedAt: (f.createdTime || f.modifiedTime || '').slice(0, 10),
-      alt: f.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' '),
-    });
+    try {
+      const raw = await fetchImage(f.id);
+      const jpeg = await toWebJpeg(raw);
+      const fileName = `${String(i + 1).padStart(3, '0')}-${f.id}.jpg`;
+      writeFileSync(join(outImgDir, fileName), jpeg);
+      photos.push({
+        src: `/gallery/drive/${fileName}`,
+        addedAt: (f.createdTime || f.modifiedTime || '').slice(0, 10),
+        alt: 'RIGID custom glass & steel project',
+      });
+      console.log(`[sync-drive]   ${i + 1}/${files.length}  ${f.name} → jpg`);
+    } catch (e) {
+      console.warn(`[sync-drive]   skipped ${f.name}: ${e.message}`);
+    }
+  }
+
+  // Safety: if a pull comes back empty (e.g. Drive throttled every download),
+  // keep the last good manifest rather than wiping the gallery.
+  if (photos.length === 0 && files.length > 0) {
+    console.warn('[sync-drive] All downloads failed — keeping existing gallery.json.');
+    process.exit(0);
   }
 
   writeFileSync(

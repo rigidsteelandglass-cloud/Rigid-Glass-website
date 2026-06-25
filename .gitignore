@@ -12,3 +12,6 @@ dist/
 # os / editor
 .DS_Store
 *.log
+
+# local Claude settings (may contain secrets like API keys — never commit)
+.claude/settings.local.json

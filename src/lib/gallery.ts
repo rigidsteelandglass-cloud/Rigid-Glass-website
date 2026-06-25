@@ -16,6 +16,15 @@ export function allPhotos(): Photo[] {
 }
 
 /**
+ * A real gallery photo by position (newest first), or `fallback` if there
+ * aren't that many yet. Lets the hero / category cards show real work while
+ * degrading gracefully to seed placeholders. Never breaks when photos change.
+ */
+export function featuredImage(index: number, fallback: string): string {
+  return photos[index]?.src ?? fallback;
+}
+
+/**
  * Recent photos for the home page. Returns everything added within the last
  * `months` months; if that's too few, falls back to the newest `min`.
  */

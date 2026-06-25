@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { site, features } from '../config';
+import { featuredImage } from '../lib/gallery';
 
 const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
 const firstName = site.owner.split(' ')[0];
@@ -37,7 +38,7 @@ const firstName = site.owner.split(' ')[0];
 
       <div class="lg:col-span-2">
         <div class="aspect-[4/5] overflow-hidden rounded-2xl border border-stone bg-mist shadow-xl">
-          <img src="/gallery/seed-2.svg" alt={`${site.owner}’s glass work`} class="h-full w-full object-cover" />
+          <img src={featuredImage(4, '/gallery/seed-2.svg')} alt={`${site.owner}’s glass work`} class="h-full w-full object-cover" />
         </div>
       </div>
     </div>
