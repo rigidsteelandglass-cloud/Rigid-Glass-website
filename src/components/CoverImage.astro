@@ -1,0 +1,29 @@
+---
+/**
+ * A page's main photo. Renders the built-in art immediately, then swaps in
+ * Noah's uploaded cover for this slot if he has set one — so the page still
+ * looks right before Supabase answers, and never shows an empty box.
+ */
+interface Props {
+  slot: string;
+  fallback: string;
+  alt: string;
+  class?: string;
+}
+const { slot, fallback, alt, class: cls = 'h-full w-full object-cover' } = Astro.props;
+---
+
+<img data-cover={slot} src={fallback} alt={alt} class={cls} />
+
+<script>
+  import { getCovers } from '../lib/supabase';
+
+  const slots = document.querySelectorAll<HTMLImageElement>('[data-cover]');
+  if (slots.length) {
+    const covers = await getCovers();
+    slots.forEach((img) => {
+      const url = covers[img.dataset.cover!];
+      if (url) img.src = url;
+    });
+  }
+</script>

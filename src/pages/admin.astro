@@ -53,6 +53,12 @@ import Layout from '../layouts/Layout.astro';
 
       <div id="logo-preview" class="mt-8"></div>
 
+      <h2 class="mt-10 font-display text-xl font-800 uppercase tracking-wide text-ink">Cover photos</h2>
+      <p class="mt-1 text-sm text-ink-soft">
+        The big photo at the top of each page. One per page — uploading replaces it.
+      </p>
+      <div id="covers" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+
       <h2 class="mt-10 font-display text-xl font-800 uppercase tracking-wide text-ink">Photos by category</h2>
       <p class="mt-1 text-sm text-ink-soft">
         The order here is the order visitors see. Use ← → to rearrange.
@@ -68,7 +74,10 @@ import Layout from '../layouts/Layout.astro';
     BUCKET,
     ADMIN_EMAIL,
     FOLDERS,
+    COVER_SLOTS,
     listPhotos,
+    getCovers,
+    setCover,
     getLogoUrl,
     nextOrder,
     withOrder,
@@ -132,6 +141,23 @@ import Layout from '../layouts/Layout.astro';
          </figure>`
       : '';
 
+    const covers = await getCovers();
+    $('covers').innerHTML = COVER_SLOTS.map(
+      (c) => `
+      <label class="cursor-pointer overflow-hidden rounded-xl border border-stone hover:border-red">
+        ${
+          covers[c.slot]
+            ? `<img src="${covers[c.slot]}" alt="" class="aspect-[4/3] w-full object-cover" />`
+            : `<div class="flex aspect-[4/3] items-center justify-center bg-mist text-xs text-ink-soft">Using built-in art</div>`
+        }
+        <span class="block border-t border-stone bg-mist px-3 py-2 text-xs font-700 text-ink">
+          ${c.name}
+          <span class="mt-0.5 block font-400 text-red">Choose photo…</span>
+        </span>
+        <input type="file" accept="image/*" class="hidden" data-cover-slot="${c.slot}" />
+      </label>`
+    ).join('');
+
     const groups = await Promise.all(FOLDERS.map((f) => listPhotos(f.slug)));
     byPath = new Map(groups.flat().map((p) => [p.path, p]));
 
@@ -194,6 +220,22 @@ import Layout from '../layouts/Layout.astro';
         order += 10;
       }
       say(`Done — ${files.length} photo${files.length > 1 ? 's are' : ' is'} live under ${label}.`);
+    } catch (err) {
+      say((err as Error).message, true);
+    }
+    input.value = '';
+    await refresh();
+  });
+
+  document.addEventListener('change', async (e) => {
+    const input = e.target as HTMLInputElement;
+    const slot = input.dataset?.coverSlot;
+    if (!slot || !input.files?.[0]) return;
+    const label = COVER_SLOTS.find((c) => c.slot === slot)?.name ?? slot;
+    say(`Updating ${label}…`);
+    try {
+      await setCover(slot, input.files[0]);
+      say(`${label} updated.`);
     } catch (err) {
       say((err as Error).message, true);
     }

@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { site, categories } from '../../config';
 import GalleryGrid from '../../components/GalleryGrid.astro';
+import CoverImage from '../../components/CoverImage.astro';
 
 export function getStaticPaths() {
   return categories.map((c) => ({ params: { category: c.slug }, props: { c } }));
@@ -33,7 +34,7 @@ const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
         </div>
       </div>
       <div class="aspect-[4/3] overflow-hidden rounded-2xl border border-stone bg-mist shadow-lg">
-        <img src={c.image} alt={c.name} class="h-full w-full object-cover" />
+        <CoverImage slot={c.slug} fallback={c.image} alt={c.name} />
       </div>
     </div>
   </section>

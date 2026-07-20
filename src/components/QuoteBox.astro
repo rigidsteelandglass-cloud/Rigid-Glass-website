@@ -1,0 +1,85 @@
+---
+import { site } from '../config';
+
+/**
+ * Interactive "get a quote" box: the visitor types what they need and it opens
+ * their own texting app with the message pre-written to Noah's phone.
+ *
+ * ponytail: an sms: link, not a form — no backend, no inbox to check, and the
+ * reply lands where Noah already works. Email fallback for desktop browsers
+ * that can't text.
+ */
+const smsNumber = site.phone.replace(/[^0-9+]/g, '');
+---
+
+<div class="overflow-hidden rounded-2xl bg-ink px-6 py-12 text-center text-white sm:px-16">
+  <h2 class="font-display text-3xl font-800 uppercase tracking-tight sm:text-4xl">Get a free quote</h2>
+  <p class="mx-auto mt-3 max-w-lg text-white/70">
+    Tell {site.owner.split(' ')[0]} about your project — it opens a text to us, already written.
+  </p>
+
+  <form id="quote" class="mx-auto mt-7 max-w-lg text-left">
+    <label class="block text-sm font-700 text-white/80">
+      What do you need?
+      <textarea
+        name="message"
+        rows="3"
+        required
+        placeholder="e.g. Frameless shower door for a 60&quot; opening in Park City — what would that run?"
+        class="mt-2 w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 focus:border-red focus:outline-none"
+      ></textarea>
+    </label>
+
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      <input
+        name="name"
+        type="text"
+        placeholder="Your name (optional)"
+        class="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 focus:border-red focus:outline-none"
+      />
+      <input
+        name="where"
+        type="text"
+        placeholder="Town (optional)"
+        class="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 focus:border-red focus:outline-none"
+      />
+    </div>
+
+    <button
+      type="submit"
+      class="mt-4 w-full rounded-lg bg-red px-7 py-3.5 text-sm font-700 text-white transition-colors hover:bg-red-deep"
+    >
+      Text it to {site.businessName}
+    </button>
+  </form>
+
+  <p class="mt-5 text-sm text-white/60">
+    Rather talk? <a href={`tel:${smsNumber}`} class="font-700 text-white underline">Call {site.phone}</a>
+    · <a href={`mailto:${site.email}`} class="font-700 text-white underline">Email us</a>
+  </p>
+  <p class="mt-5 eyebrow text-white/50">{site.closer}</p>
+</div>
+
+<script define:vars={{ smsNumber, email: site.email }}>
+  document.getElementById('quote')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const parts = [
+      String(f.get('message') ?? '').trim(),
+      String(f.get('name') ?? '').trim() && `— ${f.get('name')}`,
+      String(f.get('where') ?? '').trim() && `(${f.get('where')})`,
+    ].filter(Boolean);
+    const body = encodeURIComponent(parts.join(' '));
+    // "?&body=" is the form iOS and Android both accept.
+    window.location.href = `sms:${smsNumber}?&body=${body}`;
+
+    // Desktop browsers often ignore sms: — offer email after a beat.
+    setTimeout(() => {
+      if (!document.hidden) {
+        window.location.href = `mailto:${email}?subject=${encodeURIComponent(
+          'Quote request'
+        )}&body=${body}`;
+      }
+    }, 1200);
+  });
+</script>

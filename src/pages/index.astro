@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import { site, categories, features } from '../config';
 import GalleryGrid from '../components/GalleryGrid.astro';
+import CoverImage from '../components/CoverImage.astro';
+import QuoteBox from '../components/QuoteBox.astro';
 
 const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
 // ponytail: hero + category art stay static so the fold paints instantly.
@@ -35,7 +37,7 @@ const heroImg = '/gallery/seed-1.svg';
 
       <div class="relative">
         <div class="aspect-[4/5] overflow-hidden rounded-2xl border border-stone bg-mist shadow-xl">
-          <img src={heroImg} alt="RIGID custom glass work" class="h-full w-full object-cover" />
+          <CoverImage slot="home" fallback={heroImg} alt="RIGID custom glass work" />
         </div>
       </div>
     </div>
@@ -99,13 +101,6 @@ const heroImg = '/gallery/seed-1.svg';
 
   <!-- CTA -->
   <section class="mx-auto max-w-6xl px-5 py-16">
-    <div class="overflow-hidden rounded-2xl bg-ink px-8 py-12 text-center text-white sm:px-16">
-      <h2 class="font-display text-3xl font-800 uppercase tracking-tight sm:text-4xl">Get a free quote</h2>
-      <p class="mx-auto mt-3 max-w-lg text-white/70">Tell {site.owner.split(' ')[0]} about your project — call or text and we’ll get right back to you.</p>
-      <a href={telHref} class="mt-7 inline-block rounded-lg bg-red px-7 py-3 text-sm font-700 text-white transition-colors hover:bg-red-deep">
-        Call / Text {site.phone}
-      </a>
-      <p class="mt-5 eyebrow text-white/50">{site.closer}</p>
-    </div>
+    <QuoteBox />
   </section>
 </Layout>

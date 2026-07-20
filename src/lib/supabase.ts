@@ -121,6 +121,44 @@ export async function movePhoto(photo: Photo, dir: -1 | 1): Promise<void> {
   await rename(b, orderOf(a.name));
 }
 
+/**
+ * The single "cover" photo shown at the top of a page. Keyed by slot so Noah
+ * can set each one independently; the built-in art stays as the fallback.
+ */
+export const COVER_SLOTS = [
+  { slot: 'home', name: 'Home page — main photo' },
+  ...categories.map((c) => ({ slot: c.slug, name: `${c.name} — cover photo` })),
+  { slot: 'about', name: 'About page — photo' },
+];
+
+/** Every cover Noah has set, as slot → public URL. */
+export async function getCovers(): Promise<Record<string, string>> {
+  const { data } = await supabase.storage.from(BUCKET).list('covers', { limit: 100 });
+  const covers: Record<string, string> = {};
+  for (const f of data ?? []) {
+    if (!f.id) continue;
+    const slot = f.name.replace(/__.*$/, ''); // "about__1784-shot.jpg" -> "about"
+    covers[slot] = publicUrl(`covers/${f.name}`);
+  }
+  return covers;
+}
+
+/** Replace a cover: only one file per slot ever exists. */
+export async function setCover(slot: string, file: File): Promise<void> {
+  const storage = supabase.storage.from(BUCKET);
+  const { data } = await storage.list('covers', { limit: 100 });
+  const old = (data ?? [])
+    .filter((f) => f.id && f.name.startsWith(`${slot}__`))
+    .map((f) => `covers/${f.name}`);
+  if (old.length) await storage.remove(old);
+
+  const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+  const { error } = await storage.upload(`covers/${slot}__${Date.now()}-${safe}`, file, {
+    cacheControl: '3600',
+  });
+  if (error) throw new Error(`${file.name}: ${error.message}`);
+}
+
 /** The uploaded logo, or null to fall back to the built-in wordmark. */
 export async function getLogoUrl(): Promise<string | null> {
   const { data } = await supabase.storage.from(BUCKET).list('logo', { limit: 1 });
