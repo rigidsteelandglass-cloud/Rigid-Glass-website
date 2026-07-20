@@ -91,6 +91,11 @@ export async function nextOrder(folder: string): Promise<number> {
 /**
  * Swap a photo with its neighbour by renaming both. `dir` is -1 (up) or 1 (down).
  * No-op at the ends of the list.
+ *
+ * ponytail: copy-then-delete rather than move(), so reordering needs only the
+ * insert and delete permissions uploads already use — no extra storage policy.
+ * No temp file either: each name keeps its own timestamp, so the swapped names
+ * can't collide with the originals.
  */
 export async function movePhoto(photo: Photo, dir: -1 | 1): Promise<void> {
   const photos = await listPhotos(photo.folder);
@@ -103,17 +108,17 @@ export async function movePhoto(photo: Photo, dir: -1 | 1): Promise<void> {
   const restOf = (name: string) => name.replace(/^\d{3}-/, '');
   const storage = supabase.storage.from(BUCKET);
 
-  // Park one file under a temp name so the two renames can't collide.
-  const temp = `photos/${photo.folder}/tmp-${restOf(a.name)}`;
-  const step = async (from: string, to: string) => {
-    const { error } = await storage.move(from, to);
+  const rename = async (from: Photo, order: number) => {
+    const to = `photos/${photo.folder}/${withOrder(order, restOf(from.name))}`;
+    const { error: copyError } = await storage.copy(from.path, to);
     // Never swallow this: a refused rename looks identical to a working one.
-    if (error) throw new Error(`Could not reorder: ${error.message}`);
+    if (copyError) throw new Error(`Could not reorder: ${copyError.message}`);
+    const { error: removeError } = await storage.remove([from.path]);
+    if (removeError) throw new Error(`Reordered but left a copy behind: ${removeError.message}`);
   };
 
-  await step(a.path, temp);
-  await step(b.path, `photos/${photo.folder}/${withOrder(orderOf(a.name), restOf(b.name))}`);
-  await step(temp, `photos/${photo.folder}/${withOrder(orderOf(b.name), restOf(a.name))}`);
+  await rename(a, orderOf(b.name));
+  await rename(b, orderOf(a.name));
 }
 
 /** The uploaded logo, or null to fall back to the built-in wordmark. */
