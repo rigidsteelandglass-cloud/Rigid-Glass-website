@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { site, categories } from '../../config';
-import { featuredImage } from '../../lib/gallery';
+import GalleryGrid from '../../components/GalleryGrid.astro';
 
 export function getStaticPaths() {
   return categories.map((c) => ({ params: { category: c.slug }, props: { c } }));
@@ -10,8 +10,6 @@ export function getStaticPaths() {
 const { c } = Astro.props;
 const others = categories.filter((x) => x.slug !== c.slug);
 const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
-const imgFor = (slug: string, fallback: string) =>
-  featuredImage(categories.findIndex((x) => x.slug === slug) + 1, fallback);
 ---
 
 <Layout title={c.name} description={c.blurb}>
@@ -35,7 +33,20 @@ const imgFor = (slug: string, fallback: string) =>
         </div>
       </div>
       <div class="aspect-[4/3] overflow-hidden rounded-2xl border border-stone bg-mist shadow-lg">
-        <img src={imgFor(c.slug, c.image)} alt={c.name} class="h-full w-full object-cover" />
+        <img src={c.image} alt={c.name} class="h-full w-full object-cover" />
+      </div>
+    </div>
+  </section>
+
+  <!-- This category's photos -->
+  <section class="border-t border-stone bg-mist">
+    <div class="mx-auto max-w-6xl px-5 py-16">
+      <p class="eyebrow text-red">Recent {c.name.toLowerCase()} projects</p>
+      <h2 class="mt-2 font-display text-3xl font-800 uppercase tracking-tight text-ink sm:text-4xl">
+        The work
+      </h2>
+      <div class="mt-8">
+        <GalleryGrid source={c.slug} empty={`New ${c.name.toLowerCase()} photos are on the way — check back soon.`} />
       </div>
     </div>
   </section>
@@ -47,7 +58,7 @@ const imgFor = (slug: string, fallback: string) =>
       {others.map((o) => (
         <a href={`/services/${o.slug}`} class="group flex items-center gap-5 rounded-2xl border border-stone bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
           <div class="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-mist">
-            <img src={imgFor(o.slug, o.image)} alt={o.name} loading="lazy" class="h-full w-full object-cover" />
+            <img src={o.image} alt={o.name} loading="lazy" class="h-full w-full object-cover" />
           </div>
           <div>
             <h3 class="font-display text-lg font-800 uppercase tracking-wide text-ink">{o.name}</h3>

@@ -1,10 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import GalleryGrid from '../components/GalleryGrid.astro';
-import { allPhotos } from '../lib/gallery';
 import { site } from '../config';
-
-const photos = allPhotos();
 ---
 
 <Layout title="Our Work" description={`A gallery of custom glass and steel projects by ${site.legalName}.`}>
@@ -17,12 +14,6 @@ const photos = allPhotos();
   </section>
 
   <section class="mx-auto max-w-6xl px-5 py-10">
-    {photos.length ? (
-      <GalleryGrid photos={photos} />
-    ) : (
-      <p class="rounded-xl border border-dashed border-stone bg-mist p-10 text-center text-ink-soft">
-        Photos are on the way — check back soon.
-      </p>
-    )}
+    <GalleryGrid />
   </section>
 </Layout>

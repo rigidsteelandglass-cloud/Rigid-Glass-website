@@ -1,28 +1,34 @@
 ---
-import type { Photo } from '../lib/gallery';
+/**
+ * Renders the gallery from Supabase Storage in the browser, so new uploads go
+ * live without a Netlify rebuild.
+ *
+ * `source` is a category slug, "all" (every category, in Noah's order), or
+ * "recent" (newest uploads first — the home page).
+ */
 interface Props {
-  photos: Photo[];
+  source?: string;
+  limit?: number;
+  empty?: string;
 }
-const { photos } = Astro.props;
+const {
+  source = 'all',
+  limit = 200,
+  empty = 'Photos are on the way — check back soon.',
+} = Astro.props;
 ---
 
-<div class="[column-fill:_balance] gap-4 sm:columns-2 lg:columns-3">
+<div
+  data-gallery
+  data-source={source}
+  data-limit={limit}
+  data-empty={empty}
+  class="[column-fill:_balance] gap-4 sm:columns-2 lg:columns-3"
+>
+  <!-- filled client-side; skeletons hold the space so the page doesn't jump -->
   {
-    photos.map((p) => (
-      <button
-        type="button"
-        class="group mb-4 block w-full overflow-hidden rounded-xl border border-stone bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-red"
-        data-lightbox-src={p.src}
-        data-lightbox-alt={p.alt ?? ''}
-      >
-        <img
-          src={p.src}
-          alt={p.alt ?? 'RIGID glass project'}
-          loading="lazy"
-          decoding="async"
-          class="w-full transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-      </button>
+    [0, 1, 2].map(() => (
+      <div class="mb-4 h-56 w-full animate-pulse rounded-xl border border-stone bg-mist" />
     ))
   }
 </div>
@@ -39,6 +45,33 @@ const { photos } = Astro.props;
 </div>
 
 <script>
+  import { listPhotos, allPhotos, recentPhotos } from '../lib/supabase';
+
+  // querySelectorAll: a page may hold more than one grid (e.g. two categories).
+  for (const grid of document.querySelectorAll<HTMLElement>('[data-gallery]')) {
+    const limit = Number(grid.dataset.limit ?? 200);
+    const source = grid.dataset.source ?? 'all';
+    const photos = (
+      source === 'recent'
+        ? await recentPhotos(limit)
+        : source === 'all'
+          ? await allPhotos()
+          : await listPhotos(source)
+    ).slice(0, limit);
+    grid.innerHTML = photos.length
+      ? photos
+          .map(
+            (p) => `
+        <button type="button" data-lightbox-src="${p.url}"
+          class="group mb-4 block w-full overflow-hidden rounded-xl border border-stone bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-red">
+          <img src="${p.url}" alt="RIGID custom glass &amp; steel project" loading="lazy" decoding="async"
+            class="w-full transition-transform duration-500 group-hover:scale-[1.03]" />
+        </button>`
+          )
+          .join('')
+      : `<p class="rounded-xl border border-dashed border-stone bg-mist p-10 text-center text-ink-soft">${grid.dataset.empty}</p>`;
+  }
+
   const box = document.getElementById('lightbox');
   const img = document.getElementById('lightbox-img') as HTMLImageElement;
   const close = () => {
@@ -46,15 +79,15 @@ const { photos } = Astro.props;
     box?.classList.remove('flex');
     document.body.style.overflow = '';
   };
-  document.querySelectorAll('[data-lightbox-src]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const src = el.getAttribute('data-lightbox-src') || '';
-      img.src = src;
-      img.alt = el.getAttribute('data-lightbox-alt') || '';
-      box?.classList.remove('hidden');
-      box?.classList.add('flex');
-      document.body.style.overflow = 'hidden';
-    });
+  // delegated: photos are injected after this script runs
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement)?.closest('[data-lightbox-src]');
+    if (!el) return;
+    img.src = el.getAttribute('data-lightbox-src') || '';
+    img.alt = 'RIGID custom glass & steel project';
+    box?.classList.remove('hidden');
+    box?.classList.add('flex');
+    document.body.style.overflow = 'hidden';
   });
   document.getElementById('lightbox-close')?.addEventListener('click', close);
   box?.addEventListener('click', (e) => {

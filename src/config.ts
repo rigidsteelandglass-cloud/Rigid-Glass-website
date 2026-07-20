@@ -1,7 +1,7 @@
 /**
  * Single source of truth for RIGID's business details.
  * Edit these values to update the whole site.
- * (Project photos are pulled from Google Drive — see scripts/sync-drive.mjs.)
+ * (Project photos live in Supabase Storage, loaded at runtime — no rebuild.)
  */
 export const site = {
   businessName: 'RIGID',

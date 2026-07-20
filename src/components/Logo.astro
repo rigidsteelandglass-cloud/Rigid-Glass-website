@@ -8,7 +8,7 @@ interface Props {
 const { class: cls = '', showTagline = true } = Astro.props;
 ---
 
-<span class:list={['inline-flex flex-col items-center leading-none select-none', cls]}>
+<span data-logo class:list={['inline-flex flex-col items-center leading-none select-none', cls]}>
   <svg viewBox="0 0 200 90" class="block h-auto w-[2.4em]" aria-hidden="true" focusable="false">
     <!-- mountain range -->
     <path
@@ -40,3 +40,20 @@ const { class: cls = '', showTagline = true } = Astro.props;
     )
   }
 </span>
+
+<script>
+  // If Noah has uploaded a logo, swap it in for the built-in wordmark.
+  // Runs once per page even though <Logo /> appears in the header and footer.
+  import { getLogoUrl } from '../lib/supabase';
+
+  const url = await getLogoUrl();
+  if (url) {
+    document.querySelectorAll<HTMLElement>('[data-logo]').forEach((el) => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'RIGID Steel & Glass';
+      img.className = 'block h-[2.6em] w-auto object-contain';
+      el.replaceChildren(img);
+    });
+  }
+</script>

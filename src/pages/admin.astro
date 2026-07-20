@@ -1,0 +1,243 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Admin" description="RIGID photo manager.">
+  <section class="mx-auto max-w-3xl px-5 py-14">
+    <p class="eyebrow text-red">RIGID</p>
+    <h1 class="mt-2 font-display text-3xl font-900 uppercase tracking-tight text-ink">Photo Manager</h1>
+
+    <!-- Sign in -->
+    <form id="login" class="mt-8 hidden max-w-sm space-y-3">
+      <label class="block text-sm font-700 text-ink">
+        Email
+        <input name="email" type="email" required autocomplete="username"
+          class="mt-1 w-full rounded-lg border border-stone px-3 py-2" />
+      </label>
+      <label class="block text-sm font-700 text-ink">
+        Password
+        <input name="password" type="password" required autocomplete="current-password"
+          class="mt-1 w-full rounded-lg border border-stone px-3 py-2" />
+      </label>
+      <button class="w-full rounded-lg bg-ink px-5 py-2.5 font-700 text-white hover:bg-red">Sign in</button>
+    </form>
+
+    <!-- Manager -->
+    <div id="manager" class="mt-8 hidden">
+      <div class="flex items-center justify-between gap-4">
+        <p id="who" class="text-sm text-ink-soft"></p>
+        <button id="logout" class="text-sm font-700 text-red hover:underline">Sign out</button>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-dashed border-stone bg-mist p-6 text-center">
+          <span class="font-display font-800 uppercase tracking-wide text-ink">Add project photos</span>
+          <label class="mt-3 block text-left text-sm font-700 text-ink">
+            Which kind of work?
+            <select id="up-folder" class="mt-1 w-full rounded-lg border border-stone bg-white px-3 py-2 font-400"></select>
+          </label>
+          <label class="mt-3 block cursor-pointer rounded-lg bg-ink px-4 py-2.5 text-sm font-700 text-white hover:bg-red">
+            Choose photos…
+            <input id="up-photos" type="file" accept="image/*" multiple class="hidden" />
+          </label>
+          <span class="mt-2 block text-xs text-ink-soft">They go to the end of that category; reorder below.</span>
+        </div>
+        <label class="cursor-pointer rounded-xl border border-dashed border-stone bg-mist p-6 text-center hover:border-red">
+          <span class="font-display font-800 uppercase tracking-wide text-ink">Replace logo</span>
+          <span class="mt-1 block text-sm text-ink-soft">PNG or SVG with a transparent background</span>
+          <input id="up-logo" type="file" accept="image/png,image/svg+xml,image/*" class="hidden" />
+        </label>
+      </div>
+
+      <p id="status" class="mt-4 text-sm font-700"></p>
+
+      <div id="logo-preview" class="mt-8"></div>
+
+      <h2 class="mt-10 font-display text-xl font-800 uppercase tracking-wide text-ink">Photos by category</h2>
+      <p class="mt-1 text-sm text-ink-soft">
+        The order here is the order visitors see. Use ← → to rearrange.
+      </p>
+      <div id="photos" class="mt-4 space-y-10"></div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import {
+    supabase,
+    BUCKET,
+    ADMIN_EMAIL,
+    FOLDERS,
+    listPhotos,
+    getLogoUrl,
+    nextOrder,
+    withOrder,
+    movePhoto,
+    type Photo,
+  } from '../lib/supabase';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const login = $<HTMLFormElement>('login');
+  const manager = $<HTMLDivElement>('manager');
+  const status = $<HTMLParagraphElement>('status');
+
+  const say = (msg: string, bad = false) => {
+    status.textContent = msg;
+    status.className = `mt-4 text-sm font-700 ${bad ? 'text-red' : 'text-ink-soft'}`;
+  };
+
+  /** Only Noah's address gets the manager, even if another account exists. */
+  async function render() {
+    const { data } = await supabase.auth.getSession();
+    const email = data.session?.user.email;
+    const ok = !!email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    login.classList.toggle('hidden', ok);
+    manager.classList.toggle('hidden', !ok);
+    if (ok) {
+      $('who').textContent = `Signed in as ${email}`;
+      await refresh();
+    }
+  }
+
+  /** Category dropdown, filled once from the shared FOLDERS list. */
+  $<HTMLSelectElement>('up-folder').innerHTML = FOLDERS.map(
+    (f) => `<option value="${f.slug}">${f.name}</option>`
+  ).join('');
+
+  /** Photos indexed by path, so the reorder buttons can find their photo. */
+  let byPath = new Map<string, Photo>();
+
+  function card(p: Photo, first: boolean, last: boolean) {
+    const arrow = (dir: string, label: string, disabled: boolean) =>
+      `<button data-move="${dir}" data-path="${p.path}" ${disabled ? 'disabled' : ''}
+         class="flex-1 py-2 text-xs font-700 ${disabled ? 'text-ink-soft/40' : 'text-ink hover:bg-ink hover:text-white'}"
+         aria-label="Move ${label}">${label === 'earlier' ? '←' : '→'}</button>`;
+    return `
+      <figure class="overflow-hidden rounded-xl border border-stone">
+        <img src="${p.url}" alt="" class="aspect-square w-full object-cover" />
+        <div class="flex divide-x divide-stone border-t border-stone bg-mist">
+          ${arrow('-1', 'earlier', first)}
+          ${arrow('1', 'later', last)}
+        </div>
+        <button data-del="${p.path}" class="w-full border-t border-stone bg-mist py-2 text-xs font-700 text-red hover:bg-red hover:text-white">Delete</button>
+      </figure>`;
+  }
+
+  async function refresh() {
+    const logo = await getLogoUrl();
+    $('logo-preview').innerHTML = logo
+      ? `<figure class="rounded-xl border border-stone bg-mist p-4 text-center">
+           <img src="${logo}" alt="Current logo" class="mx-auto h-20 object-contain" />
+           <figcaption class="mt-2 text-xs text-ink-soft">Current logo — upload another to replace it.</figcaption>
+         </figure>`
+      : '';
+
+    const groups = await Promise.all(FOLDERS.map((f) => listPhotos(f.slug)));
+    byPath = new Map(groups.flat().map((p) => [p.path, p]));
+
+    $('photos').innerHTML = FOLDERS.map((f, i) => {
+      const photos = groups[i];
+      return `
+        <section>
+          <h3 class="font-display text-sm font-800 uppercase tracking-wide text-ink">
+            ${f.name} <span class="font-400 text-ink-soft">(${photos.length})</span>
+          </h3>
+          <div class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            ${
+              photos.length
+                ? photos.map((p, j) => card(p, j === 0, j === photos.length - 1)).join('')
+                : `<p class="col-span-full text-sm text-ink-soft">No photos in this category yet.</p>`
+            }
+          </div>
+        </section>`;
+    }).join('');
+  }
+
+  login.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(login);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: String(f.get('email')),
+      password: String(f.get('password')),
+    });
+    if (error) return say(error.message, true);
+    login.reset();
+    await render();
+  });
+
+  $('logout').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  });
+
+  async function put(path: string, file: File) {
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+    if (error) throw new Error(`${file.name}: ${error.message}`);
+  }
+
+  $<HTMLInputElement>('up-photos').addEventListener('change', async (e) => {
+    const input = e.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
+    const folder = $<HTMLSelectElement>('up-folder').value;
+    const label = FOLDERS.find((f) => f.slug === folder)?.name ?? folder;
+    say(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''} to ${label}…`);
+    try {
+      let order = await nextOrder(folder);
+      for (const f of files) {
+        // Timestamp keeps names unique; the 3-digit prefix sets display order.
+        const safe = f.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+        await put(`photos/${folder}/${withOrder(order, `${Date.now()}-${safe}`)}`, f);
+        order += 10;
+      }
+      say(`Done — ${files.length} photo${files.length > 1 ? 's are' : ' is'} live under ${label}.`);
+    } catch (err) {
+      say((err as Error).message, true);
+    }
+    input.value = '';
+    await refresh();
+  });
+
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-move]');
+    if (!btn || (btn as HTMLButtonElement).disabled) return;
+    const photo = byPath.get(btn.dataset.path!);
+    if (!photo) return;
+    say('Reordering…');
+    await movePhoto(photo, Number(btn.dataset.move) as -1 | 1);
+    say('Order saved.');
+    await refresh();
+  });
+
+  $<HTMLInputElement>('up-logo').addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    say('Replacing logo…');
+    try {
+      // Only one logo ever: clear the folder before adding the new one.
+      const { data } = await supabase.storage.from(BUCKET).list('logo');
+      const old = (data ?? []).filter((f) => f.id).map((f) => `logo/${f.name}`);
+      if (old.length) await supabase.storage.from(BUCKET).remove(old);
+      await put(`logo/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '-')}`, file);
+      say('Logo updated.');
+    } catch (err) {
+      say((err as Error).message, true);
+    }
+    (e.target as HTMLInputElement).value = '';
+    await refresh();
+  });
+
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-del]');
+    if (!btn) return;
+    if (!confirm('Delete this photo from the website?')) return;
+    const { error } = await supabase.storage.from(BUCKET).remove([btn.dataset.del!]);
+    say(error ? error.message : 'Photo deleted.', !!error);
+    await refresh();
+  });
+
+  await render();
+</script>

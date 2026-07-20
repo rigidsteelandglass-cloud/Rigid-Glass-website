@@ -6,13 +6,12 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "sync": "node scripts/sync-drive.mjs",
-    "prebuild": "node scripts/sync-drive.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
     "astro": "^5.6.1",
     "sharp": "^0.35.2"
   },

@@ -27,6 +27,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.com
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {Astro.url.pathname.startsWith('/admin') && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="preconnect" href="https://hqucdpebfvssjhhwvjli.supabase.co" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />

@@ -1,12 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { site, categories, features } from '../config';
-import { recentPhotos, featuredImage } from '../lib/gallery';
 import GalleryGrid from '../components/GalleryGrid.astro';
 
 const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
-const recent = recentPhotos(3, 6).slice(0, 6);
-const heroImg = featuredImage(0, '/gallery/seed-1.svg');
+// ponytail: hero + category art stay static so the fold paints instantly.
+// Only the gallery is live from Supabase. Swap these to live photos if Noah
+// asks to control them too.
+const heroImg = '/gallery/seed-1.svg';
 ---
 
 <Layout>
@@ -59,7 +60,7 @@ const heroImg = featuredImage(0, '/gallery/seed-1.svg');
       {categories.map((c, i) => (
         <a href={`/services/${c.slug}`} class="reveal group overflow-hidden rounded-2xl border border-stone bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
           <div class="aspect-[4/3] overflow-hidden bg-mist">
-            <img src={featuredImage(i + 1, c.image)} alt={c.name} loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <img src={c.image} alt={c.name} loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
           <div class="p-6">
             <h3 class="font-display text-lg font-800 uppercase tracking-wide text-ink">{c.name}</h3>
@@ -85,7 +86,7 @@ const heroImg = featuredImage(0, '/gallery/seed-1.svg');
         <a href="/work" class="hidden shrink-0 text-sm font-700 text-red hover:underline sm:inline">View all →</a>
       </div>
       <div class="mt-8">
-        <GalleryGrid photos={recent} />
+        <GalleryGrid source="recent" limit={6} />
       </div>
       <div class="mt-10 text-center">
         <a href="/work" class="group inline-flex items-center gap-2 rounded-lg bg-ink px-6 py-3 text-sm font-700 text-white transition-colors hover:bg-red">
