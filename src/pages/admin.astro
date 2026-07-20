@@ -207,8 +207,12 @@ import Layout from '../layouts/Layout.astro';
     const photo = byPath.get(btn.dataset.path!);
     if (!photo) return;
     say('Reordering…');
-    await movePhoto(photo, Number(btn.dataset.move) as -1 | 1);
-    say('Order saved.');
+    try {
+      await movePhoto(photo, Number(btn.dataset.move) as -1 | 1);
+      say('Order saved.');
+    } catch (err) {
+      say((err as Error).message, true);
+    }
     await refresh();
   });
 

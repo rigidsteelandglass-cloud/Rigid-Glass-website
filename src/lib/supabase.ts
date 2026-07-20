@@ -105,9 +105,15 @@ export async function movePhoto(photo: Photo, dir: -1 | 1): Promise<void> {
 
   // Park one file under a temp name so the two renames can't collide.
   const temp = `photos/${photo.folder}/tmp-${restOf(a.name)}`;
-  await storage.move(a.path, temp);
-  await storage.move(b.path, `photos/${photo.folder}/${withOrder(orderOf(a.name), restOf(b.name))}`);
-  await storage.move(temp, `photos/${photo.folder}/${withOrder(orderOf(b.name), restOf(a.name))}`);
+  const step = async (from: string, to: string) => {
+    const { error } = await storage.move(from, to);
+    // Never swallow this: a refused rename looks identical to a working one.
+    if (error) throw new Error(`Could not reorder: ${error.message}`);
+  };
+
+  await step(a.path, temp);
+  await step(b.path, `photos/${photo.folder}/${withOrder(orderOf(a.name), restOf(b.name))}`);
+  await step(temp, `photos/${photo.folder}/${withOrder(orderOf(b.name), restOf(a.name))}`);
 }
 
 /** The uploaded logo, or null to fall back to the built-in wordmark. */

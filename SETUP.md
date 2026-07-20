@@ -42,6 +42,14 @@ create policy "gallery admin delete"
   on storage.objects for delete to authenticated
   using (bucket_id = 'gallery'
     and auth.jwt() ->> 'email' = 'rigidsteelandglass@gmail.com');
+
+-- Reordering renames files, which counts as an update.
+create policy "gallery admin update"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'gallery'
+    and auth.jwt() ->> 'email' = 'rigidsteelandglass@gmail.com')
+  with check (bucket_id = 'gallery'
+    and auth.jwt() ->> 'email' = 'rigidsteelandglass@gmail.com');
 ```
 
 ### 2. Create Noah's login
