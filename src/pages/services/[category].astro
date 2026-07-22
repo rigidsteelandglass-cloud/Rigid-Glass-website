@@ -59,7 +59,7 @@ const telHref = `tel:${site.phone.replace(/[^0-9+]/g, '')}`;
       {others.map((o) => (
         <a href={`/services/${o.slug}`} class="group flex items-center gap-5 rounded-2xl border border-stone bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
           <div class="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-mist">
-            <img src={o.image} alt={o.name} loading="lazy" class="h-full w-full object-cover" />
+            <CoverImage slot={o.slug} fallback={o.image} alt={o.name} />
           </div>
           <div>
             <h3 class="font-display text-lg font-800 uppercase tracking-wide text-ink">{o.name}</h3>
